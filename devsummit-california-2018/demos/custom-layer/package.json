@@ -1,0 +1,11 @@
+{
+  "name": "custom-layer-example",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@types/chai": "4.1.2",
+    "@types/webgl2": "0.0.2",
+    "dojo-typings": "1.11.9",
+    "maquette-query": "0.11.7"
+  }
+}

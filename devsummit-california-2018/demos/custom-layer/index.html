@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+  <title>Custom Layer - JS API 4.x</title>
+  <style>
+    html,
+    body,
+    #viewDiv,
+    #headerDiv {
+      font-family: "Avenir Next W01","Avenir Next W00","Avenir Next","Avenir","Helvetica Neue",sans-serif;
+      font-weight: bold;
+      color: #444;
+
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    #headerDiv {
+      position: absolute;
+      height: 70px;
+
+      background-color: #FFF;
+      border-bottom: 1px solid #AAA;
+      z-index: 1;
+    }
+
+    #headerDiv > h2 {
+      padding: 0 0 0 20px;
+    }
+
+    #legendDiv {
+      position: absolute;
+      width: 180px;
+      padding: 0 20px 20px 20px;
+
+      bottom: 30px;
+      right: 20px;
+
+      background-color: #FFF;
+      border: 1px solid #DDD;
+      z-index: 1;
+    }
+
+
+    #legendDiv > h4,
+    #legendDiv > h5 {
+      padding: 0 0 0 5px;
+    }
+
+    #legendDiv > hr {
+      border: 1px solid #DDD;
+    }
+
+    #legendInfoDiv,
+    #optionInfoDiv {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    #legendInfoDiv > div,
+    #optionInfoDiv > div,
+    #optionInfoDiv > input {
+      flex: 0 40%;
+      margin: 4%;
+      height: 20px;
+    }
+
+    #legendInfoDiv > div:nth-child(odd) {
+      border: 1px solid #AAA;
+    }
+
+  </style>
+
+  <script>
+    var dojoConfig = {
+      async: true,
+      isDebug: true,
+      packages: [
+        { name: "esri", location: "../esri" }
+      ],
+      aliases: [
+        [/^webgl-engine/, function() { return "esri/views/3d/webgl-engine"; } ],
+        [/^engine/, function() { return "esri/views/3d/webgl-engine"; } ]
+      ],
+      paths: {
+        app: window.location.href.replace(/\/[^/]+$/, "/"),
+        lerc: "https://cdn.rawgit.com/Esri/lerc/b0650ff9/OtherLanguages/js/"
+      },
+      defaultDuration: 50,
+      has: {
+        "esri-promise-compatibility": 1,
+        "esri-promise-compatibility-deprecation-warnings": 1
+      }
+    };
+  </script>
+  <script src="dojo-config.js"></script>
+
+  <link rel="stylesheet" href="//js.arcgis.com/4.7/esri/css/main.css">
+  <script src="//js.arcgis.com/4.7/"></script>
+
+  <script>
+    require([
+      "./custom-tile-layer.js",
+      "esri/config",
+      "esri/Color",
+      "esri/Map",
+      "esri/layers/SceneLayer",
+      "esri/renderers/UniqueValueRenderer",
+      "esri/symbols/MeshSymbol3D",
+      "esri/symbols/FillSymbol3DLayer",
+      "esri/views/SceneView",
+      "esri/widgets/BasemapGallery",
+      "esri/widgets/Search",
+
+      "dojo/domReady!"
+    ], function(
+      CustomTileLayer,
+      esriConfig,
+      Color,
+      Map,
+      SceneLayer,
+      UniqueValueRenderer,
+      MeshSymbol3D,
+      FillSymbol3DLayer,
+      SceneView,
+      BasemapGallery,
+      Search
+    ) {
+
+      // Create a new instance of the TintLayer and set its properties
+      var customTileLayer = new CustomTileLayer({
+        url: "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer/tile/{z}/{y}/{x}",
+        title: "Avalanche Hazard Layer"
+      });
+
+      var map = new Map({
+        basemap: "topo",
+        ground: "world-elevation",
+        layers: [ customTileLayer ]
+      });
+
+      // Create the SceneView
+      var view = new SceneView({
+        container: "viewDiv",
+        map: map,
+        padding: {
+          top: 70
+        },
+        camera: {
+          // wallis
+          // position: [7.99, 46.28, 5800.26],
+          // heading: 6.91,
+          // tilt: 78.73
+
+          // mattehorn
+          position: [7.61, 45.91, 8886.40],
+          heading: 25.82209613377579,
+          tilt: 55.162212377135276
+
+          // sf
+          // position: [-122.372, 37.782, 1800.26],
+          // heading: 302.64,
+          // tilt: 52.13
+
+          // yosemite
+          // position: [-119.79, 37.67, 8335.72],
+          // heading: 65.93,
+          // tilt: 63.05
+        }
+      });
+
+      // Adds the search widget below other elements in
+      // the top left corner of the view
+      var searchWidget = new Search({
+        view: view
+      });
+      view.ui.add(searchWidget, {
+        position: "top-right",
+        index: 2
+      });
+
+
+      var basemapGallery = new BasemapGallery({
+        view: view
+      });
+
+      document.getElementById("enableShading").addEventListener("change", function(event) {
+        view.whenLayerView(layer).then(function(lv) {
+          customTileLayer.shade = event.target.checked;
+
+          lv.doRefresh()
+        });
+      });
+
+      document.getElementById("enableBasemap").addEventListener("change", function(event) {
+        if (event.target.checked) {
+          // Add widget to the bottom left corner of the view
+          view.ui.add(basemapGallery, {
+            position: "bottom-left"
+          });
+        }
+        else {
+          view.ui.remove(basemapGallery);
+        }
+
+      });
+
+      view.map.watch("basemap", function(basemap) {
+        if (basemap.title === "Imagery") {
+          customTileLayer.shadeDirection = -1;
+        }
+        else {
+          customTileLayer.shadeDirection = 1;
+        }
+
+        if (customTileLayer.shade) {
+          view.whenLayerView(layer).then(function(lv) {
+            lv.doRefresh()
+          });
+        }
+      });
+
+      window.layer = customTileLayer;
+      window.view = view;
+    });
+  </script>
+
+</head>
+
+<body>
+  <div id="headerDiv"><h2>ArcGIS API for JavaScript 4.x: Avalanche Hazard Layer</h2></div>
+  <div id="viewDiv"></div>
+  <div id="legendDiv">
+    <h4>Legend</h4>
+    <h5>Slope angle color codes</h5>
+    <div id="legendInfoDiv">
+      <div style="background-color: rgba(172, 16, 64, 0.5)"></div>
+      <div>&gt; 45 &deg;</div>
+
+      <div style="background-color: rgba(255, 0, 0, 0.5)"></div>
+      <div>&gt; 40 &deg;</div>
+
+      <div style="background-color: rgba(255, 128, 0, 0.5)"></div>
+      <div>&gt; 35 &deg;</div>
+
+      <div style="background-color: rgba(255, 255, 0, 0.5)"></div>
+      <div>&gt; 30 &deg;</div>
+    </div>
+    <hr>
+    <h4>Options</h4>
+    <h5>Change visualization</h5>
+    <div id="optionInfoDiv">
+      <input id="enableShading" type="checkbox">
+      <div>Relief</div>
+
+      <input id="enableBasemap" type="checkbox">
+      <div>Basemaps</div>
+    </div>
+
+  </div>
+</body>
+</html>

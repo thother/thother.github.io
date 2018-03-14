@@ -1,0 +1,61 @@
+<script>
+function snippet(containers, interlinks) {
+  require([
+    "esri/Map",
+    "esri/views/SceneView"
+  ], function(
+    Map,
+    SceneView
+  ) {
+    var view = new SceneView({
+      map: new Map({
+        basemap: "hybrid",
+        ground: "world-elevation"
+      }),
+
+      container: "viewDiv",
+
+      ui: {
+        components: []
+      },
+
+      environment: {
+        atmosphere: {
+          quality: "high"
+        },
+
+        lighting: {
+          date: new Date("Sun Mar 15 2015 12:00:00 GMT-8 (CET)")
+        }
+      },
+
+      camera: {
+        position: [-117.117, 32.624, 800.00],
+        heading: 355.77,
+        tilt: 78.47
+      }
+    });
+
+
+    var freeze = false;
+
+    interlinks.playButton = function() {
+      view.basemapTerrain.skirts = false;
+
+      freeze = !freeze;
+
+      view.basemapTerrain.setBorders(freeze);
+      view.basemapTerrain.setUpdatesDisabled(freeze);
+    }
+
+  });
+}
+
+settings = {
+  disableOverviewMap: true,
+  disableLog: true
+};
+
+</script>
+
+<script src="./support/snippet.js"></script>

@@ -1,0 +1,132 @@
+<script>
+function snippet(containers, interlinks) {
+  require([
+    "esri/Map",
+    "esri/layers/FeatureLayer",
+    "esri/layers/SceneLayer",
+    "esri/views/SceneView",
+  ], function(
+    Map,
+    FeatureLayer,
+    SceneLayer,
+    SceneView
+  ) {
+
+    var symbol1 = {
+      type: "point-3d",  // autocasts as new PointSymbol3D()
+      symbolLayers: [{
+        type: "object",  // autocasts as new ObjectSymbol3DLayer()
+        width: 500,    // diameter of the object from east to west in meters
+        height: 500,  // height of object in meters
+        depth: 500,   // diameter of the object from north to south in meters
+        resource: { primitive: "cube" },
+        material: { color: "red" }
+      }]
+    };
+
+    var symbol2 = {
+      type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
+      style: "square",
+      color: "blue",
+      size: "150px",  // pixels
+      outline: {  // autocasts as new SimpleLineSymbol()
+        color: [ 255, 255, 0 ],
+        width: 3  // points
+      }
+    };
+
+    var featureLayer = new FeatureLayer({
+      url: "http://services.arcgis.com/80hk79qB8z45zcHi/arcgis/rest/services/Neighborhood_Points/FeatureServer/0",
+      renderer: {
+        type: "simple"
+      }
+    });
+
+    var sceneLayer = new SceneLayer({
+      url: "http://scene.arcgis.com/arcgis/rest/services/Hosted/Buildings_San_Francisco/SceneServer"
+    });
+
+    var map = new Map({
+      basemap: "satellite",
+      ground: "world-elevation",
+      layers: [
+        featureLayer,
+        sceneLayer
+      ]
+    });
+
+    var view = new SceneView({
+      map: map,
+      container: containers.viewDiv,
+
+      ui: {
+        components: []
+      },
+
+      environment: {
+        lighting: {
+          date: "Thu Mar 15 2018 18:00:00 GMT-0700 (PDT)"
+        }
+      },
+
+      camera: {
+        position: {
+          "x": -122.37781112765722,
+          "y": 37.785790411583285,
+          "z": 458.00045307539403
+        },
+        heading: 281.40560824563886,
+        tilt: 73.25484119818313
+      }
+    });
+
+    interlinks.log("q:", view.qualityProfile === "high" ? "h" : "l", "s:", view.environment.lighting.directShadowsEnabled ? "1" : "0");
+
+    var symbolIdx = 0;
+    interlinks.playButton = function(arguments) {
+      if (arguments === "toggleSymbol") {
+        var newSymbol;
+        if (symbolIdx % 3 === 0) {
+          newSymbol = symbol1;
+        }
+        else if (symbolIdx % 3 === 1) {
+          newSymbol = symbol2;
+        }
+        else {
+          newSymbol= null;
+        }
+
+        symbolIdx++;
+
+        var renderer = featureLayer.renderer.clone();
+        renderer.symbol = newSymbol;
+        featureLayer.renderer = renderer;
+      }
+
+      if (arguments === "toggleShadow") {
+        view.environment.lighting.directShadowsEnabled = !view.environment.lighting.directShadowsEnabled;
+      }
+
+      if (arguments === "toggleQuality") {
+        view.environment.atmosphere.quality = view.qualityProfile === "high" ? "low" : "high";
+        view.qualityProfile = view.qualityProfile === "high" ? "low" : "high";
+      }
+
+      interlinks.log("q:", view.qualityProfile === "high" ? "h" : "l", "s:", view.environment.lighting.directShadowsEnabled ? "1" : "0");
+    };
+
+    parent.window.view = view;
+
+  });
+}
+
+settings = {
+  // disableViewDiv: true,
+  // disableFPS: true,
+  disableOverview: true,
+  // disableLog: true
+};
+
+</script>
+
+<script src="./support/snippet.js"></script>
