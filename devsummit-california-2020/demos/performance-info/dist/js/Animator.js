@@ -40,6 +40,10 @@ define(["require", "exports", "esri/core/accessorSupport/decorators", "esri/core
             this.audioElement.pause();
             this.audioEnabled = false;
         };
+        Animator.prototype.resetState = function () {
+            this.rotationHeadings.clear();
+            this.rotationStates.clear();
+        };
         Animator.prototype.animateCamera = function () {
             var _this = this;
             if (!this.cameraEnabled || !this.scenario) {
@@ -53,7 +57,7 @@ define(["require", "exports", "esri/core/accessorSupport/decorators", "esri/core
         };
         Animator.prototype.animateResources = function () {
             return __awaiter(this, void 0, void 0, function () {
-                var requestFrame, canvasElement, barWidth, barHeight, x, i, color, numFeatures, bufferAverage, i_1, i_2, graphic, geometry, uid, angle;
+                var requestFrame, canvasElement, barWidth, barHeight, x, i, color, numFeatures, bufferAverage, i_1, i_2, graphic, uid, angle;
                 var _this = this;
                 return __generator(this, function (_a) {
                     requestFrame = false;
@@ -80,13 +84,10 @@ define(["require", "exports", "esri/core/accessorSupport/decorators", "esri/core
                         this.average += bufferAverage / 10;
                         for (i_2 = 0; i_2 < numFeatures; i_2++) {
                             graphic = this.graphicsLayer.graphics.getItemAt(i_2);
-                            geometry = graphic.geometry.clone();
-                            uid = graphic.uid;
-                            geometry.z = geometry.z || 0;
-                            if (this.average > 0.1) {
-                                geometry.z = this.average / 20;
+                            uid = graphic.attributes["OBJECTID"];
+                            if (this.average > 20) {
                                 angle = this.rotationStates.get(uid) || 0;
-                                if (bufferAverage > 40 && angle < 1) {
+                                if (angle < 1) {
                                     this.rotationStates.set(uid, angle + Math.floor(bufferAverage / 20) * 360);
                                 }
                                 else {
@@ -94,7 +95,6 @@ define(["require", "exports", "esri/core/accessorSupport/decorators", "esri/core
                                 }
                                 requestFrame = true;
                             }
-                            graphic.geometry = geometry;
                         }
                     }
                     // ---------------------------------------------------------------
@@ -102,12 +102,13 @@ define(["require", "exports", "esri/core/accessorSupport/decorators", "esri/core
                         if (!graphic.symbol || graphic.symbol.type !== "point-3d") {
                             return;
                         }
-                        var uid = graphic.uid;
+                        var uid = graphic.attributes["OBJECTID"];
                         var clone = graphic.symbol.clone();
                         var symbolLayer = clone.symbolLayers.getItemAt(0);
                         if (symbolLayer && symbolLayer.type === "object") {
                             if (!_this.rotationHeadings.has(uid)) {
                                 _this.rotationHeadings.set(uid, symbolLayer.heading);
+                                _this.rotationStates.set(uid, 0);
                             }
                             symbolLayer.heading = _this.rotationHeadings.get(uid) + _this.rotationStates.get(uid);
                         }
@@ -133,7 +134,6 @@ define(["require", "exports", "esri/core/accessorSupport/decorators", "esri/core
             audioElement.loop = true;
             document.querySelector("head").appendChild(audioElement);
             this.audioElement = audioElement;
-            // for legacy browsers
             var AudioContext = window.AudioContext || window.webkitAudioContext;
             this.audioContext = new AudioContext();
             var audioSource = this.audioContext.createMediaElementSource(audioElement);

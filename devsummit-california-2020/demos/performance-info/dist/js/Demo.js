@@ -1,4 +1,4 @@
-define(["require", "exports", "esri/views/SceneView", "./ResourceInfo", "./PerformanceInfo", "./Generator", "esri/Camera", "./Controller", "./config", "./Animator", "esri/core/accessorSupport/decorators", "esri/core/Accessor", "esri/core/watchUtils", "esri/geometry/Point"], function (require, exports, SceneView, ResourceInfo_1, PerformanceInfo_1, Generator_1, Camera, Controller_1, config_1, Animator_1, decorators_1, Accessor, watchUtils, Point) {
+define(["require", "exports", "esri/views/SceneView", "./PerformanceInfo", "./FPSInfo", "./Generator", "esri/Camera", "./Controller", "./config", "./Animator", "esri/core/accessorSupport/decorators", "esri/core/Accessor", "esri/core/watchUtils", "esri/geometry/Point"], function (require, exports, SceneView, PerformanceInfo_1, FPSInfo_1, Generator_1, Camera, Controller_1, config_1, Animator_1, decorators_1, Accessor, watchUtils, Point) {
     var Demo = /** @class */ (function (_super) {
         __extends(Demo, _super);
         function Demo(properties) {
@@ -62,7 +62,7 @@ define(["require", "exports", "esri/views/SceneView", "./ResourceInfo", "./Perfo
         };
         Demo.prototype.load = function () {
             return __awaiter(this, void 0, void 0, function () {
-                var _a, view, animator, controlGroups, animationScenarios, controller, generator, resourceInfo, performanceInfoInfo;
+                var _a, view, animator, controlGroups, animationScenarios, controller, generator, performanceInfo, fpsInfo;
                 var _this = this;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
@@ -462,10 +462,11 @@ define(["require", "exports", "esri/views/SceneView", "./ResourceInfo", "./Perfo
                                         };
                                         view.camera = camera;
                                         // --
+                                        var needsStateReset = false;
                                         var graphicsLength = config_1.graphicsLayer.graphics.length;
                                         for (var i = 0; i < graphicsLength; i++) {
                                             var graphic = config_1.graphicsLayer.graphics.getItemAt(i);
-                                            var uid = graphic.uid;
+                                            var uid = graphic.attributes["OBJECTID"];
                                             var speed = 10;
                                             var distance_1 = (i / graphicsLength * config_1.carAnimationLineLength + (Date.now() - config.start) / 1000 * speed) % config_1.carAnimationLineLength;
                                             var _b = _this.findLineSegmentPosition(config_1.carAnimationLineSegmentLengths, distance_1), x_1 = _b.x, y_1 = _b.y, dx_1 = _b.dx, dy_1 = _b.dy, idx = _b.idx;
@@ -481,7 +482,11 @@ define(["require", "exports", "esri/views/SceneView", "./ResourceInfo", "./Perfo
                                                 symbolLayer.heading = 360 - Math.atan2(dy_1, dx_1) / Math.PI * 180 + 90;
                                                 graphic.symbol = symbol;
                                                 config.states.set(uid, idx);
+                                                needsStateReset = true;
                                             }
+                                        }
+                                        if (needsStateReset) {
+                                            animator.resetState();
                                         }
                                     }
                                 }, {
@@ -519,10 +524,12 @@ define(["require", "exports", "esri/views/SceneView", "./ResourceInfo", "./Perfo
                                             ambientOcclusionEnabled: false
                                         };
                                         view.camera = camera;
+                                        // --
+                                        var needsStateReset = false;
                                         var graphicsLength = config_1.graphicsLayer.graphics.length;
                                         for (var i = 0; i < graphicsLength; i++) {
                                             var graphic = config_1.graphicsLayer.graphics.getItemAt(i);
-                                            var uid = graphic.uid;
+                                            var uid = graphic.attributes["OBJECTID"];
                                             var areaRadius = 1000;
                                             var windAngle = 260;
                                             if (!config.states.has(uid)) {
@@ -555,15 +562,20 @@ define(["require", "exports", "esri/views/SceneView", "./ResourceInfo", "./Perfo
                                             clone.y = y1 + fraction * (y2 - y1);
                                             clone.z = 0;
                                             graphic.geometry = clone;
-                                            var needsSymbolUpdate = !state.symbol || state.symbol !== graphic.symbol;
-                                            if (needsSymbolUpdate && graphic.symbol) {
+                                            if (graphic.symbol && (!state.symbol || state.symbol !== graphic.symbol)) {
                                                 var symbol = graphic.symbol.clone();
                                                 var symbolLayer = symbol.symbolLayers.getItemAt(0);
-                                                symbolLayer.heading = 360 - Math.atan2(state.y2 - state.y1, state.x2 - state.x1) / Math.PI * 180 + 90;
+                                                symbolLayer.heading = (360 - Math.atan2(state.y2 - state.y1, state.x2 - state.x1) / Math.PI * 180 + 90) % 360;
                                                 symbolLayer.roll = symbolLayer.heading > windAngle ? 30 : -30;
+                                                if (!state.symbol) {
+                                                    needsStateReset = true;
+                                                }
                                                 graphic.symbol = symbol;
                                                 state.symbol = symbol;
                                             }
+                                        }
+                                        if (needsStateReset) {
+                                            animator.resetState();
                                         }
                                     }
                                 }, {
@@ -602,10 +614,11 @@ define(["require", "exports", "esri/views/SceneView", "./ResourceInfo", "./Perfo
                                         };
                                         view.camera = camera;
                                         // --
+                                        var needsStateReset = false;
                                         var graphicsLength = config_1.graphicsLayer.graphics.length;
                                         for (var i = 0; i < graphicsLength; i++) {
                                             var graphic = config_1.graphicsLayer.graphics.getItemAt(i);
-                                            var uid = graphic.uid;
+                                            var uid = graphic.attributes["OBJECTID"];
                                             var distance = 100;
                                             if (!config.states.has(uid)) {
                                                 config.states.set(uid, true);
@@ -614,7 +627,11 @@ define(["require", "exports", "esri/views/SceneView", "./ResourceInfo", "./Perfo
                                                 clone.y = config.camera.position.y + distance * (Math.random() - 0.5);
                                                 clone.z = 0;
                                                 graphic.geometry = clone;
+                                                needsStateReset = true;
                                             }
+                                        }
+                                        if (needsStateReset) {
+                                            animator.resetState();
                                         }
                                     }
                                 }, {
@@ -640,10 +657,11 @@ define(["require", "exports", "esri/views/SceneView", "./ResourceInfo", "./Perfo
                                     },
                                     tick: function (ticks, resources) {
                                         var config = resources.config, view = resources.view;
+                                        var needsStateReset = false;
                                         var graphicsLength = config_1.graphicsLayer.graphics.length;
                                         for (var i = 0; i < graphicsLength; i++) {
                                             var graphic_1 = config_1.graphicsLayer.graphics.getItemAt(i);
-                                            var uid = graphic_1.uid;
+                                            var uid = graphic_1.attributes["OBJECTID"];
                                             var areaRadius = 10000;
                                             var windAngle = 260;
                                             if (!config.states.has(uid)) {
@@ -656,7 +674,7 @@ define(["require", "exports", "esri/views/SceneView", "./ResourceInfo", "./Perfo
                                                 var y1_2 = config.camera.position.y + areaRadius * (Math.sin((windAngle + 90 + courseOffset) / 180 * Math.PI) + Math.sin(windAngle / 180 * Math.PI) * horizontalOffset_1);
                                                 var x2_2 = config.camera.position.x + areaRadius * (Math.cos((windAngle - 90 + courseOffset) / 180 * Math.PI) + Math.cos(windAngle / 180 * Math.PI) * horizontalOffset_1);
                                                 var y2_2 = config.camera.position.y + areaRadius * (Math.sin((windAngle - 90 + courseOffset) / 180 * Math.PI) + Math.sin(windAngle / 180 * Math.PI) * horizontalOffset_1);
-                                                var lineLength = Math.sqrt(Math.pow(x2_2 - x1_2, 2) + Math.pow(y2_2 - y1_2, 2));
+                                                var lineLength_2 = Math.sqrt(Math.pow(x2_2 - x1_2, 2) + Math.pow(y2_2 - y1_2, 2));
                                                 config.states.set(uid, {
                                                     verticalOffset: verticalOffset,
                                                     horizontalOffset: horizontalOffset_1,
@@ -667,14 +685,14 @@ define(["require", "exports", "esri/views/SceneView", "./ResourceInfo", "./Perfo
                                                     y1: y1_2,
                                                     x2: x2_2,
                                                     y2: y2_2,
-                                                    lineLength: lineLength,
+                                                    lineLength: lineLength_2,
                                                     symbol: null
                                                 });
                                             }
                                             var state = config.states.get(uid);
-                                            var x1 = state.x1, y1 = state.y1, x2 = state.x2, y2 = state.y2, speed = state.speed, startOffset = state.startOffset, horizontalOffset = state.horizontalOffset;
+                                            var x1 = state.x1, y1 = state.y1, x2 = state.x2, y2 = state.y2, speed = state.speed, startOffset = state.startOffset, horizontalOffset = state.horizontalOffset, lineLength = state.lineLength;
                                             var distance = (Date.now() - config.start) / 1000 * speed + startOffset;
-                                            var fraction = (distance % length) / length;
+                                            var fraction = (distance % lineLength) / lineLength;
                                             var clone = graphic_1.geometry.clone();
                                             clone.x = x1 + fraction * (x2 - x1);
                                             clone.y = y1 + fraction * (y2 - y1);
@@ -684,9 +702,15 @@ define(["require", "exports", "esri/views/SceneView", "./ResourceInfo", "./Perfo
                                                 var symbol = graphic_1.symbol.clone();
                                                 var symbolLayer = symbol.symbolLayers.getItemAt(0);
                                                 symbolLayer.heading = 360 - Math.atan2(y2 - y1, x2 - x1) / Math.PI * 180 + 90;
+                                                if (!state.symbol) {
+                                                    needsStateReset = true;
+                                                }
                                                 graphic_1.symbol = symbol;
                                                 state.symbol = symbol;
                                             }
+                                        }
+                                        if (needsStateReset) {
+                                            animator.resetState();
                                         }
                                         // --
                                         var camera = view.camera.clone();
@@ -725,6 +749,9 @@ define(["require", "exports", "esri/views/SceneView", "./ResourceInfo", "./Perfo
                                             mode: "relative-to-scene"
                                         };
                                     }
+                                    animationScenarios.forEach(function (scenario) {
+                                        scenario.config.states && scenario.config.states.clear();
+                                    });
                                     var scenario = animationScenarios.find(function (scenario) { return scenario.name === name; });
                                     if (!scenario) {
                                         scenario = animationScenarios[1];
@@ -735,10 +762,10 @@ define(["require", "exports", "esri/views/SceneView", "./ResourceInfo", "./Perfo
                                     }
                                 } });
                             view.ui.add(generator, "manual");
-                            resourceInfo = new ResourceInfo_1.ResourceInfo({ view: view });
-                            view.ui.add(resourceInfo, "manual");
-                            performanceInfoInfo = new PerformanceInfo_1.PerformanceInfo();
-                            view.ui.add(performanceInfoInfo, "manual");
+                            performanceInfo = new PerformanceInfo_1.PerformanceInfo({ view: view });
+                            view.ui.add(performanceInfo, "manual");
+                            fpsInfo = new FPSInfo_1.FPSInfo();
+                            view.ui.add(fpsInfo, "manual");
                             return [4 /*yield*/, view.when()];
                         case 1:
                             _b.sent();

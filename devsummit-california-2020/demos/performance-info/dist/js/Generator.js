@@ -155,7 +155,10 @@ define(["require", "exports", "esri/core/accessorSupport/decorators", "esri/widg
                         },
                         "x": -8238112.846146458,
                         "y": 4970465.220192298
-                    })
+                    }),
+                    attributes: {
+                        "OBJECTID": i
+                    }
                 }));
             }
         };

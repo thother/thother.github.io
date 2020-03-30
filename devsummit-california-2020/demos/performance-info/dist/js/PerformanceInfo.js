@@ -7,14 +7,14 @@ define(["require", "exports", "esri/core/tsSupport/declareExtendsHelper", "esri/
     var MESSAGES = {
         unsupported: "This layer is not supported"
     };
-    var ResourceInfo = /** @class */ (function (_super) {
-        __extends(ResourceInfo, _super);
+    var PerformanceInfo = /** @class */ (function (_super) {
+        __extends(PerformanceInfo, _super);
         //--------------------------------------------------------------------------
         //
         //  Lifecycle
         //
         //--------------------------------------------------------------------------
-        function ResourceInfo(properties) {
+        function PerformanceInfo(properties) {
             var _this = _super.call(this) || this;
             //--------------------------------------------------------------------------
             //
@@ -30,7 +30,7 @@ define(["require", "exports", "esri/core/tsSupport/declareExtendsHelper", "esri/
             _this.intervalHandle = null;
             return _this;
         }
-        ResourceInfo.prototype.initialize = function () {
+        PerformanceInfo.prototype.initialize = function () {
             var _this = this;
             watchUtils.init(this, "view", function () {
                 if (_this.intervalHandle) {
@@ -39,7 +39,7 @@ define(["require", "exports", "esri/core/tsSupport/declareExtendsHelper", "esri/
                 window.setInterval(function () { return _this.renderNow(); }, 1000);
             });
         };
-        ResourceInfo.prototype.destroy = function () {
+        PerformanceInfo.prototype.destroy = function () {
             this.intervalHandle && window.clearInterval(this.intervalHandle);
         };
         //--------------------------------------------------------------------------
@@ -47,24 +47,24 @@ define(["require", "exports", "esri/core/tsSupport/declareExtendsHelper", "esri/
         //  Public Methods
         //
         //--------------------------------------------------------------------------
-        ResourceInfo.prototype.render = function () {
+        PerformanceInfo.prototype.render = function () {
             var className = this.view.popup.dockEnabled ? CSS.small : "";
-            return (widget_1.tsx("div", { id: "resourceInfo", class: className, role: "presentation", key: "esri-resource-info__root" }, this.renderContainerNode()));
+            return (widget_1.tsx("div", { id: "performanceInfo", class: className, role: "presentation", key: "esri-performance-info__root" }, this.renderContainerNode()));
         };
-        ResourceInfo.prototype.renderContainerNode = function () {
+        PerformanceInfo.prototype.renderContainerNode = function () {
             if (!this.visible) {
                 return null;
             }
             if (!this.view) {
                 return this.renderUnsupportedMessage();
             }
-            var resourceInfo = this.view.resourceInfo;
-            var layerResourceInfoNodes = [];
-            for (var _i = 0, _a = resourceInfo.layerResourceInfo; _i < _a.length; _i++) {
-                var layerResourceInfo = _a[_i];
-                layerResourceInfoNodes.push(this.renderLayerResourceInfoNode(resourceInfo, layerResourceInfo));
+            var performanceInfo = this.view.performanceInfo;
+            var layerPerformanceInfoNodes = [];
+            for (var _i = 0, _a = performanceInfo.layerPerformanceInfos; _i < _a.length; _i++) {
+                var layerPerformanceInfo = _a[_i];
+                layerPerformanceInfoNodes.push(this.renderLayerPerformanceInfoNode(performanceInfo, layerPerformanceInfo));
             }
-            return (widget_1.tsx("div", { key: "resource-info_root" },
+            return (widget_1.tsx("div", { key: "performance-info_root" },
                 widget_1.tsx("table", null,
                     widget_1.tsx("thead", null,
                         widget_1.tsx("tr", null,
@@ -73,40 +73,40 @@ define(["require", "exports", "esri/core/tsSupport/declareExtendsHelper", "esri/
                         widget_1.tsx("tr", null,
                             widget_1.tsx("td", null, "Quality:"),
                             widget_1.tsx("td", { colspan: "2" },
-                                Math.round(100 * resourceInfo.quality),
+                                Math.round(100 * performanceInfo.quality),
                                 "%")),
                         widget_1.tsx("tr", null,
                             widget_1.tsx("td", null, "Load:"),
-                            widget_1.tsx("td", { colspan: "2" }, Math.floor(resourceInfo.load)))),
+                            widget_1.tsx("td", { colspan: "2" }, Math.floor(performanceInfo.load)))),
                     widget_1.tsx("thead", null,
                         widget_1.tsx("tr", null,
                             widget_1.tsx("td", { colspan: "3" }, "Memory"))),
                     widget_1.tsx("tbody", null,
                         widget_1.tsx("tr", null,
                             widget_1.tsx("td", null, "Total:"),
-                            widget_1.tsx("td", { colspan: "2" }, toScientificNotation(resourceInfo.totalMemory))),
+                            widget_1.tsx("td", { colspan: "2" }, toScientificNotation(performanceInfo.totalMemory))),
                         widget_1.tsx("tr", null,
                             widget_1.tsx("td", null, "Used:"),
-                            widget_1.tsx("td", null, toScientificNotation(resourceInfo.usedMemory)),
-                            widget_1.tsx("td", null, this.renderMemoryBar("usedMemory", resourceInfo))),
+                            widget_1.tsx("td", null, toScientificNotation(performanceInfo.usedMemory)),
+                            widget_1.tsx("td", null, this.renderMemoryBar("usedMemory", performanceInfo))),
                         widget_1.tsx("tr", null,
                             widget_1.tsx("td", null, "Terrain:"),
-                            widget_1.tsx("td", null, toScientificNotation(resourceInfo.terrainMemory)),
-                            widget_1.tsx("td", null, this.renderMemoryBar("terrainMemory", resourceInfo))),
+                            widget_1.tsx("td", null, toScientificNotation(performanceInfo.terrainMemory)),
+                            widget_1.tsx("td", null, this.renderMemoryBar("terrainMemory", performanceInfo))),
                         widget_1.tsx("tr", null,
                             widget_1.tsx("td", null, "Edges:"),
-                            widget_1.tsx("td", null, toScientificNotation(resourceInfo.edgesMemory)),
-                            widget_1.tsx("td", null, this.renderMemoryBar("edgesMemory", resourceInfo)))),
+                            widget_1.tsx("td", null, toScientificNotation(performanceInfo.edgesMemory)),
+                            widget_1.tsx("td", null, this.renderMemoryBar("edgesMemory", performanceInfo)))),
                     widget_1.tsx("thead", null,
                         widget_1.tsx("tr", null,
                             widget_1.tsx("td", { colspan: "3" }, "Layers"))),
-                    widget_1.tsx("tbody", null, layerResourceInfoNodes))));
+                    widget_1.tsx("tbody", null, layerPerformanceInfoNodes))));
         };
-        ResourceInfo.prototype.renderUnsupportedMessage = function () {
-            return (widget_1.tsx("div", { key: "resource-info__unsupported" },
+        PerformanceInfo.prototype.renderUnsupportedMessage = function () {
+            return (widget_1.tsx("div", { key: "performance-info__unsupported" },
                 widget_1.tsx("p", null, MESSAGES.unsupported)));
         };
-        ResourceInfo.prototype.renderLayerResourceInfoNode = function (resourceInfo, layerResourceInfo) {
+        PerformanceInfo.prototype.renderLayerPerformanceInfoNode = function (performanceInfo, layerPerformanceInfo) {
             var layerTypeMap = {
                 "scene": "SceneLayer",
                 "feature": "FeatureLayer",
@@ -115,37 +115,37 @@ define(["require", "exports", "esri/core/tsSupport/declareExtendsHelper", "esri/
                 "elevation": "ElevationLayer",
                 "base-elevation": "ElevationLayer"
             };
-            return (widget_1.tsx("tr", { key: "resource-info_layer_" + layerResourceInfo.layer.id },
-                widget_1.tsx("td", null, layerTypeMap[layerResourceInfo.layer.type]),
-                widget_1.tsx("td", null, toScientificNotation(layerResourceInfo.memory)),
+            return (widget_1.tsx("tr", { key: "performance-info_layer_" + layerPerformanceInfo.layer.id },
+                widget_1.tsx("td", null, layerTypeMap[layerPerformanceInfo.layer.type]),
+                widget_1.tsx("td", null, toScientificNotation(layerPerformanceInfo.memory)),
                 widget_1.tsx("td", null,
-                    widget_1.tsx("div", { class: "memoryIndicator", key: "resource-info_layer_" + layerResourceInfo.layer.id + "_memoery" },
-                        widget_1.tsx("div", { class: "memoryIndicatorValue", style: "width: " + 100 * layerResourceInfo.memory / resourceInfo.totalMemory + "%" })))));
+                    widget_1.tsx("div", { class: "memoryIndicator", key: "performance-info_layer_" + layerPerformanceInfo.layer.id + "_memory" },
+                        widget_1.tsx("div", { class: "memoryIndicatorValue", style: "width: " + 100 * layerPerformanceInfo.memory / performanceInfo.totalMemory + "%" })))));
         };
-        ResourceInfo.prototype.renderMemoryBar = function (key, resourceInfo) {
-            if (key === "layerResourceInfo") {
+        PerformanceInfo.prototype.renderMemoryBar = function (key, performanceInfo) {
+            if (key === "layerPerformanceInfos") {
                 return;
             }
-            return (widget_1.tsx("div", { class: "memoryIndicator", key: "resource-info_root_" + key },
-                widget_1.tsx("div", { class: "memoryIndicatorValue", style: "width: " + 100 * resourceInfo[key] / resourceInfo.totalMemory + "%" })));
+            return (widget_1.tsx("div", { class: "memoryIndicator", key: "performance-info_root_" + key },
+                widget_1.tsx("div", { class: "memoryIndicatorValue", style: "width: " + 100 * performanceInfo[key] / performanceInfo.totalMemory + "%" })));
         };
         __decorate([
             decorators_1.property()
-        ], ResourceInfo.prototype, "view", void 0);
+        ], PerformanceInfo.prototype, "view", void 0);
         __decorate([
             decorators_1.property(),
             widget_1.renderable()
-        ], ResourceInfo.prototype, "visible", void 0);
+        ], PerformanceInfo.prototype, "visible", void 0);
         __decorate([
             decorators_1.property(),
             widget_1.renderable()
-        ], ResourceInfo.prototype, "active", void 0);
-        ResourceInfo = __decorate([
-            decorators_1.subclass("esri.widgets.ResourceInfo")
-        ], ResourceInfo);
-        return ResourceInfo;
+        ], PerformanceInfo.prototype, "active", void 0);
+        PerformanceInfo = __decorate([
+            decorators_1.subclass("esri.widgets.PerformanceInfo")
+        ], PerformanceInfo);
+        return PerformanceInfo;
     }(decorators_1.declared(Widget)));
-    exports.ResourceInfo = ResourceInfo;
+    exports.PerformanceInfo = PerformanceInfo;
     function toScientificNotation(value) {
         value = Math.floor(value);
         if (value > 1e+9) {
